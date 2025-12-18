@@ -1,12 +1,14 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import {
-    Sword, Shield, Skull, Zap, Scroll, Map as MapIcon,
-    Backpack, X, Save, Sparkles, Flame, CloudRain, Heart, Volume2, VolumeX
+    Sword, Skull, Zap, Scroll, Map as MapIcon,
+    Backpack, X, Sparkles, Flame, CloudRain, Volume2, VolumeX,
+    ChevronUp, ChevronDown
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip
 } from 'recharts';
 import backgroundImage from '../assets/background.png';
+import { useGameSound } from '../hooks/useGameSound';
 
 // --- Assets & Constants ---
 
@@ -38,16 +40,23 @@ const RPGModel = () => {
     const [showMap, setShowMap] = useState(false); // Toggles the Chart Modal
     const [questAccepted, setQuestAccepted] = useState(false); // Controls main flow: false = show quest intro, true = show stats
     const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+
+    // UI State
+    const [isOracleExpanded, setIsOracleExpanded] = useState(false);
+
     const audioRef = useRef<HTMLAudioElement>(null);
+    const { playTick, playClick, playFanfare } = useGameSound();
 
     // Play music when quest is accepted
     useEffect(() => {
         if (questAccepted && audioRef.current && !isMusicPlaying) {
+            playFanfare();
             audioRef.current.play().then(() => setIsMusicPlaying(true)).catch(() => { });
         }
-    }, [questAccepted]);
+    }, [questAccepted, isMusicPlaying, playFanfare]);
 
     const toggleMusic = () => {
+        playClick();
         if (audioRef.current) {
             if (isMusicPlaying) {
                 audioRef.current.pause();
@@ -56,6 +65,11 @@ const RPGModel = () => {
             }
             setIsMusicPlaying(!isMusicPlaying);
         }
+    };
+
+    const handleAcceptQuest = () => {
+        playClick();
+        setQuestAccepted(true);
     };
 
     // --- Calculation Engine ---
@@ -151,8 +165,8 @@ const RPGModel = () => {
                 {/* MENU BUTTONS */}
                 <div className="flex flex-col gap-3">
                     <GameButton icon={isMusicPlaying ? <Volume2 /> : <VolumeX />} label={isMusicPlaying ? "Mute" : "Music"} onClick={toggleMusic} />
-                    <GameButton icon={<Backpack />} label="Bag" />
-                    <GameButton icon={<MapIcon />} label="Map" onClick={() => setShowMap(true)} alert={true} />
+                    <GameButton icon={<Backpack />} label="Bag" onClick={playClick} />
+                    <GameButton icon={<MapIcon />} label="Map" onClick={() => { playClick(); setShowMap(true); }} alert={true} />
                 </div>
             </div>
 
@@ -203,7 +217,7 @@ const RPGModel = () => {
 
                                 {/* Accept Quest Button */}
                                 <button
-                                    onClick={() => setQuestAccepted(true)}
+                                    onClick={handleAcceptQuest}
                                     className="bg-gradient-to-r from-[#e69d45] to-[#d68c35] hover:from-[#f0a850] hover:to-[#e69d45] text-white font-['Fredoka'] px-12 py-4 rounded-xl border-b-4 border-[#b57b32] active:border-b-0 active:translate-y-1 transition-all text-2xl uppercase shadow-xl flex items-center justify-center gap-3 mx-auto"
                                 >
                                     <Sword size={24} />
@@ -214,16 +228,13 @@ const RPGModel = () => {
                             </div>
                         </div>
 
-                        {/* Oracle Character */}
-                        <div className="absolute -bottom-16 -right-8 w-32 h-32 md:w-48 md:h-48 drop-shadow-2xl filter brightness-110 pointer-events-none">
-                            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Eve&backgroundColor=ffdfbf" alt="Oracle" className="w-full h-full transform scale-x-[-1]" />
-                        </div>
+                        {/* REMOVED ORACLE IMAGE AS REQUESTED */}
                     </div>
                 </div>
             ) : (
                 /* --- STATS GAMEPLAY AREA (After Acceptance) --- */
                 <>
-                    <main className="relative z-10 max-w-5xl mx-auto p-4 pb-64 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mt-4">
+                    <main className="relative z-10 max-w-5xl mx-auto p-4 pb-48 md:pb-64 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mt-4">
 
                         {/* LEFT: HERO STATS (DRIVERS) */}
                         <div className="space-y-6">
@@ -233,14 +244,14 @@ const RPGModel = () => {
                             </div>
 
                             <div className="bg-[#f4e4bc] p-1 rounded-xl shadow-2xl border-b-8 border-r-4 border-[#8b5a2b]">
-                                <div className="bg-[#5c4033] p-4 rounded-lg border-2 border-[#3e2723] space-y-5">
-                                    <StatSlider label="Urgency" icon="⚡" value={urgency} setValue={setUrgency} color="bg-yellow-400" />
-                                    <StatSlider label="Loot Value" icon="💎" value={reward} setValue={setReward} color="bg-blue-400" />
-                                    <StatSlider label="Spirit (Why)" icon="🔥" value={why} setValue={setWhy} max={5} step={0.1} color="bg-purple-400" />
+                                <div className="bg-[#5c4033] p-4 rounded-lg border-2 border-[#3e2723] space-y-6">
+                                    <StatSlider label="Urgency" icon="⚡" value={urgency} setValue={setUrgency} color="bg-yellow-400" playTick={playTick} />
+                                    <StatSlider label="Loot Value" icon="💎" value={reward} setValue={setReward} color="bg-blue-400" playTick={playTick} />
+                                    <StatSlider label="Spirit (Why)" icon="🔥" value={why} setValue={setWhy} max={5} step={0.1} color="bg-purple-400" playTick={playTick} />
 
                                     {/* Inverse Logic for Base Level */}
                                     <div className="pt-2 border-t border-white/10">
-                                        <StatSlider label="Comfort Zone" icon="🛌" value={baseLevel} setValue={setBaseLevel} color="bg-green-400" />
+                                        <StatSlider label="Comfort Zone" icon="🛌" value={baseLevel} setValue={setBaseLevel} color="bg-green-400" playTick={playTick} />
                                         <p className="text-[10px] text-orange-200 text-right mt-1">*Higher comfort reduces drive</p>
                                     </div>
                                 </div>
@@ -255,63 +266,107 @@ const RPGModel = () => {
                             </div>
 
                             <div className="bg-[#f4e4bc] p-1 rounded-xl shadow-2xl border-b-8 border-r-4 border-[#8b5a2b]">
-                                <div className="bg-[#2c3e50] p-4 rounded-lg border-2 border-[#1a252f] space-y-5">
-                                    <StatSlider label="Fog (Clarity)" icon="☁️" value={uncertainty} setValue={setUncertainty} color="bg-slate-400" />
-                                    <StatSlider label="Difficulty" icon="⛰️" value={complexity} setValue={setComplexity} color="bg-red-400" />
-                                    <StatSlider label="Dread (Fear)" icon="👻" value={fear} setValue={setFear} color="bg-purple-600" />
-                                    <StatSlider label="Terrain (Friction)" icon="🕸️" value={friction} setValue={setFriction} color="bg-orange-600" />
-                                    <StatSlider label="Curse (Habit)" icon="⚓" value={habitInertia} setValue={setHabitInertia} color="bg-teal-600" />
+                                <div className="bg-[#2c3e50] p-4 rounded-lg border-2 border-[#1a252f] space-y-6">
+                                    <StatSlider label="Fog (Clarity)" icon="☁️" value={uncertainty} setValue={setUncertainty} color="bg-slate-400" playTick={playTick} />
+                                    <StatSlider label="Difficulty" icon="⛰️" value={complexity} setValue={setComplexity} color="bg-red-400" playTick={playTick} />
+                                    <StatSlider label="Dread (Fear)" icon="👻" value={fear} setValue={setFear} color="bg-purple-600" playTick={playTick} />
+                                    <StatSlider label="Terrain (Friction)" icon="🕸️" value={friction} setValue={setFriction} color="bg-orange-600" playTick={playTick} />
+                                    <StatSlider label="Curse (Habit)" icon="⚓" value={habitInertia} setValue={setHabitInertia} color="bg-teal-600" playTick={playTick} />
                                 </div>
                             </div>
                         </div>
 
                     </main>
 
-                    {/* --- PREDICTION FEEDBACK PANEL (Bottom) --- */}
-                    <div className="fixed bottom-0 left-0 w-full z-50 p-4 md:p-8 flex justify-center">
-                        <div className="max-w-4xl w-full relative animate-slide-up">
+                    {/* --- PREDICTION FEEDBACK PANEL (Bottom Smart Sheet) --- */}
+                    <div className="fixed bottom-0 left-0 w-full z-50 flex justify-center pointer-events-none">
+                        <div className="max-w-4xl w-full relative animate-slide-up pointer-events-auto">
 
+                            {/* The Smart Sheet Container */}
+                            <div
+                                className={`bg-[#1e1e24] border-t-4 border-l-4 border-r-4 border-[#f4e4bc] rounded-t-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.5)] relative text-white transition-all duration-300 ease-in-out ${isOracleExpanded ? 'h-auto pb-8' : 'h-24 pb-0'}`}
+                            >
+                                {/* Drag Handle / Toggle Button */}
+                                <button
+                                    onClick={() => { playClick(); setIsOracleExpanded(!isOracleExpanded); }}
+                                    className="absolute -top-5 left-1/2 -translate-x-1/2 bg-[#e69d45] w-12 h-10 rounded-t-lg border-t-2 border-l-2 border-r-2 border-[#f4e4bc] flex items-center justify-center text-white shadow-lg hover:bg-[#f0a850]"
+                                >
+                                    {isOracleExpanded ? <ChevronDown /> : <ChevronUp />}
+                                </button>
 
-                            {/* Prediction Container */}
-                            <div className="bg-[#1e1e24]/95 border-4 border-[#f4e4bc] rounded-2xl p-4 md:p-5 shadow-2xl relative text-white">
+                                {/* Content Wrapper */}
+                                <div className="p-4 px-6 md:px-8">
 
-                                {/* Speaker Name Tag */}
-                                <div className="absolute -top-5 left-8 bg-[#e69d45] px-6 py-2 rounded-lg border-2 border-[#f4e4bc] shadow-lg transform -rotate-2">
-                                    <span className="font-['Fredoka'] text-white text-xl uppercase tracking-wider">Oracle Eve</span>
-                                </div>
+                                    {/* Header (Always Visible) */}
+                                    <div className="flex items-center justify-between gap-4 cursor-pointer" onClick={() => !isOracleExpanded && setIsOracleExpanded(true)}>
 
-                                {/* Layout Grid inside Box */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                                        {/* Left: Summary */}
+                                        <div className="flex items-center gap-4">
+                                            <div className="hidden md:block w-12 h-12 bg-slate-800 rounded-lg overflow-hidden border-2 border-white/20">
+                                                 <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=Eve&backgroundColor=ffdfbf`} alt="Oracle" className="w-full h-full" />
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[#e69d45] font-['Fredoka'] uppercase text-sm tracking-widest">Oracle Eve</span>
+                                                    <span className="text-xs text-gray-400 bg-white/10 px-2 py-0.5 rounded-full">{isOracleExpanded ? 'Expanded' : 'Summary'}</span>
+                                                </div>
+                                                <h3 className="text-lg md:text-xl font-bold font-['Nunito'] text-white">
+                                                    {getSuccessText(stats.probability)} <span className="text-gray-400 text-sm font-normal">(Click to see more)</span>
+                                                </h3>
+                                            </div>
+                                        </div>
 
-                                    {/* Left: Oracle Message */}
-                                    <div className="md:col-span-2">
-                                        <p className="text-lg md:text-xl font-medium leading-relaxed font-['Nunito'] text-gray-200">
-                                            • {getOracleMessage()}
-                                        </p>
-                                        <div className="mt-4 flex gap-4 text-sm text-yellow-500 font-bold uppercase tracking-widest">
-                                            <span>Chance: {getSuccessText(stats.probability)}</span>
-                                            <span>•</span>
-                                            <span>Roll: {(stats.probability * 100).toFixed(0)}/100</span>
+                                        {/* Right: Score */}
+                                        <div className="flex items-center gap-3">
+                                            <div className="text-right">
+                                                <p className="text-[10px] text-gray-400 uppercase tracking-wider">Success Rate</p>
+                                                <p className="text-2xl md:text-3xl font-bold text-yellow-400 font-['Fredoka']">{(stats.probability * 100).toFixed(0)}%</p>
+                                            </div>
+                                            {/* Circular Progress (CSS Only) */}
+                                            <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-full border-4 border-slate-700 flex items-center justify-center bg-slate-800">
+                                                <div className="absolute inset-0 rounded-full border-4 border-yellow-400 border-t-transparent animate-spin" style={{ animationDuration: '3s' }}></div>
+                                                <span className="text-xs font-bold">{(stats.probability * 10).toFixed(0)}</span>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Right: Mood Selection + Probability Display */}
-                                    <div className="flex flex-col gap-2 justify-center md:border-l border-white/10 md:pl-6">
-                                        <p className="text-xs text-gray-400 uppercase font-bold mb-1 text-center">Status Effect (Mood)</p>
-                                        <div className="flex gap-2 justify-center">
-                                            <PotionButton color="bg-rose-500" icon={<CloudRain size={16} />} active={mood === 'DEPRESSED'} onClick={() => setMood('DEPRESSED')} />
-                                            <PotionButton color="bg-blue-500" icon={<Sparkles size={16} />} active={mood === 'NEUTRAL'} onClick={() => setMood('NEUTRAL')} />
-                                            <PotionButton color="bg-yellow-500" icon={<Flame size={16} />} active={mood === 'POSITIVE'} onClick={() => setMood('POSITIVE')} />
-                                        </div>
+                                    {/* Expanded Content (Details) */}
+                                    {isOracleExpanded && (
+                                        <div className="mt-6 pt-6 border-t border-white/10 grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
+                                             {/* Message */}
+                                            <div className="md:col-span-2 space-y-4">
+                                                <p className="text-lg font-medium leading-relaxed font-['Nunito'] text-gray-200 bg-black/20 p-4 rounded-lg border-l-4 border-yellow-500">
+                                                    "{getOracleMessage()}"
+                                                </p>
 
-                                        {/* Big Probability Display */}
-                                        <div className="mt-3 bg-gradient-to-r from-green-600 to-emerald-500 text-white font-['Fredoka'] py-3 px-4 rounded-lg text-center shadow-lg">
-                                            <p className="text-xs uppercase tracking-wider opacity-80">Probability of Action</p>
-                                            <p className="text-3xl font-bold">{(stats.probability * 100).toFixed(0)}%</p>
+                                                <div className="flex gap-2">
+                                                    <div className="flex-1 bg-slate-800 p-2 rounded border border-white/5 text-center">
+                                                        <span className="block text-xs text-gray-500 uppercase">Drivers</span>
+                                                        <span className="text-green-400 font-bold">{stats.rawDrive.toFixed(1)}</span>
+                                                    </div>
+                                                    <div className="flex-1 bg-slate-800 p-2 rounded border border-white/5 text-center">
+                                                        <span className="block text-xs text-gray-500 uppercase">Blockers</span>
+                                                        <span className="text-red-400 font-bold">{stats.totalBlockers.toFixed(1)}</span>
+                                                    </div>
+                                                    <div className="flex-1 bg-slate-800 p-2 rounded border border-white/5 text-center">
+                                                        <span className="block text-xs text-gray-500 uppercase">Logit</span>
+                                                        <span className="text-blue-400 font-bold">{stats.logit.toFixed(2)}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Mood Selector */}
+                                            <div className="flex flex-col gap-3 justify-center md:border-l border-white/10 md:pl-6">
+                                                <p className="text-xs text-gray-400 uppercase font-bold text-center">Apply Status Effect</p>
+                                                <div className="flex gap-2 justify-center">
+                                                    <PotionButton color="bg-rose-500" icon={<CloudRain size={16} />} active={mood === 'DEPRESSED'} onClick={() => { playClick(); setMood('DEPRESSED'); }} />
+                                                    <PotionButton color="bg-blue-500" icon={<Sparkles size={16} />} active={mood === 'NEUTRAL'} onClick={() => { playClick(); setMood('NEUTRAL'); }} />
+                                                    <PotionButton color="bg-yellow-500" icon={<Flame size={16} />} active={mood === 'POSITIVE'} onClick={() => { playClick(); setMood('POSITIVE'); }} />
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
-
                             </div>
                         </div>
                     </div>
@@ -322,7 +377,7 @@ const RPGModel = () => {
             {showMap && (
                 <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
                     <div className="bg-[#f3e5d0] w-full max-w-2xl rounded-sm shadow-2xl relative p-8 border-[12px] border-[#5c4033]">
-                        <button onClick={() => setShowMap(false)} className="absolute top-4 right-4 text-[#5c4033] hover:text-red-600">
+                        <button onClick={() => { playClick(); setShowMap(false); }} className="absolute top-4 right-4 text-[#5c4033] hover:text-red-600">
                             <X size={32} strokeWidth={3} />
                         </button>
 
@@ -360,7 +415,14 @@ const RPGModel = () => {
 
 // --- Subcomponents ---
 
-const GameButton = ({ icon, label, onClick, alert }: any) => (
+interface GameButtonProps {
+    icon: React.ReactNode;
+    label: string;
+    onClick: () => void;
+    alert?: boolean;
+}
+
+const GameButton = ({ icon, label, onClick, alert }: GameButtonProps) => (
     <button
         onClick={onClick}
         className="group relative bg-[#8b5a2b] w-14 h-14 rounded-xl border-2 border-[#5c3a1b] shadow-lg flex items-center justify-center text-[#f3e5d0] hover:bg-[#a06832] active:scale-95 transition-all"
@@ -373,40 +435,81 @@ const GameButton = ({ icon, label, onClick, alert }: any) => (
     </button>
 );
 
-const StatSlider = ({ label, icon, value, setValue, max = 10, step = 1, color }: any) => {
-    const percentage = (value / max) * 100;
+interface StatSliderProps {
+    label: string;
+    icon: string;
+    value: number;
+    setValue: (val: number) => void;
+    max?: number;
+    step?: number;
+    color: string;
+    playTick?: () => void;
+}
+
+// Refactored "Professional" Slider
+const StatSlider = ({ label, icon, value, setValue, max = 10, step = 1, color, playTick }: StatSliderProps) => {
+    // Generate tick marks
+    const ticks = [];
+    const tickCount = max / (step >= 1 ? 1 : 1); // Limit ticks for small steps
+    if (tickCount <= 20) {
+        for (let i = 0; i <= max; i += (step >= 1 ? 1 : step)) {
+            ticks.push(i);
+        }
+    }
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = parseFloat(e.target.value);
+        if (newValue !== value) {
+            setValue(newValue);
+            if (playTick) playTick();
+        }
+    };
+
     return (
-        <div className="relative">
-            <div className="flex justify-between text-white/90 text-sm font-bold mb-1 font-['Fredoka'] tracking-wide">
-                <span className="flex items-center gap-1.5">{icon} {label}</span>
-                <span>{value}</span>
-            </div>
-            <div className="h-5 bg-black/40 rounded-full border-2 border-black/20 relative overflow-hidden">
-                {/* Background Pattern */}
-                <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/diagonal-stripes.png')]"></div>
-
-                {/* Fill Bar */}
-                <div
-                    className={`h-full ${color} transition-all duration-300 relative`}
-                    style={{ width: `${percentage}%` }}
-                >
-                    <div className="absolute top-0 left-0 w-full h-1 bg-white/30"></div>
-                    <div className="absolute bottom-0 left-0 w-full h-1 bg-black/10"></div>
-                </div>
+        <div className="relative mb-2">
+            <div className="flex justify-between text-white/90 text-sm font-bold mb-2 font-['Fredoka'] tracking-wide">
+                <span className="flex items-center gap-1.5 text-shadow-sm">{icon} {label}</span>
+                <span className="bg-black/30 px-2 rounded text-xs leading-5">{value.toFixed(step < 1 ? 1 : 0)}</span>
             </div>
 
-            <input
-                type="range"
-                min={0} max={max} step={step}
-                value={value}
-                onChange={(e) => setValue(parseFloat(e.target.value))}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            />
+            <div className="relative h-8 flex items-center">
+                 {/* Track Background */}
+                 <div className="absolute w-full h-3 bg-black/40 rounded-full border border-white/10 shadow-inner overflow-hidden">
+                     {/* Fill */}
+                    <div
+                        className={`absolute top-0 left-0 h-full ${color} opacity-80 transition-all duration-75 ease-out`}
+                        style={{ width: `${(value / max) * 100}%` }}
+                    ></div>
+                 </div>
+
+                 {/* Ticks */}
+                 <div className="absolute w-full h-full pointer-events-none flex justify-between px-[10px]">
+                     {ticks.map((t) => (
+                         <div key={t} className="w-0.5 h-1 bg-white/20 mt-3.5"></div>
+                     ))}
+                 </div>
+
+                 {/* Real Input - styled with class 'rpg-slider' from index.css */}
+                 <input
+                    type="range"
+                    min={0} max={max} step={step}
+                    value={value}
+                    onChange={handleChange}
+                    className="rpg-slider absolute inset-0 z-10"
+                />
+            </div>
         </div>
     );
 };
 
-const PotionButton = ({ color, icon, active, onClick }: any) => (
+interface PotionButtonProps {
+    color: string;
+    icon: React.ReactNode;
+    active: boolean;
+    onClick: () => void;
+}
+
+const PotionButton = ({ color, icon, active, onClick }: PotionButtonProps) => (
     <button
         onClick={onClick}
         className={`w-12 h-12 rounded-full flex items-center justify-center border-2 shadow-sm transition-all duration-200 transform hover:scale-110

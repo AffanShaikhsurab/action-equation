@@ -1,1 +1,69 @@
 @import "tailwindcss";
+
+@layer components {
+    /* Custom Range Slider Styling */
+    .rpg-slider {
+        -webkit-appearance: none;
+        width: 100%;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    .rpg-slider:focus {
+        outline: none;
+    }
+
+    /* Track (handled by a separate div in my component, but if we need standard track styling) */
+    .rpg-slider::-webkit-slider-runnable-track {
+        background: transparent;
+        height: 100%;
+    }
+
+    /* Thumb */
+    .rpg-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        margin-top: -8px; /* Center it relative to track if needed */
+
+        /* The "Scroll Icon" Look */
+        background-color: #fcd34d; /* yellow-300 */
+        border: 2px solid #78350f; /* amber-900 */
+        height: 32px;
+        width: 20px;
+        border-radius: 4px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+
+        /* Decorative pseudo-element hack isn't easy here, so we stick to a styled box */
+        background-image: linear-gradient(to bottom, #fcd34d 0%, #d97706 100%);
+        transform: translateY(25%); /* Adjust vertical alignment */
+    }
+
+    /* Firefox Thumb */
+    .rpg-slider::-moz-range-thumb {
+        border: none;
+        background-color: #fcd34d;
+        border: 2px solid #78350f;
+        height: 32px;
+        width: 20px;
+        border-radius: 4px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+        background-image: linear-gradient(to bottom, #fcd34d 0%, #d97706 100%);
+    }
+}
+
+/* Animations */
+@keyframes slide-up {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-up {
+    animation: slide-up 0.5s ease-out forwards;
+}
+
+@keyframes slide-down {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-down {
+    animation: slide-down 0.5s ease-out forwards;
+}

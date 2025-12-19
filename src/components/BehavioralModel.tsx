@@ -245,13 +245,13 @@ const RPGModel = () => {
 
                             <div className="bg-[#f4e4bc] p-1 rounded-xl shadow-2xl border-b-8 border-r-4 border-[#8b5a2b]">
                                 <div className="bg-[#5c4033] p-4 rounded-lg border-2 border-[#3e2723] space-y-6">
-                                    <StatSlider label="Urgency" icon="⚡" value={urgency} setValue={setUrgency} color="bg-yellow-400" playTick={playTick} />
-                                    <StatSlider label="Loot Value" icon="💎" value={reward} setValue={setReward} color="bg-blue-400" playTick={playTick} />
-                                    <StatSlider label="Spirit (Why)" icon="🔥" value={why} setValue={setWhy} max={5} step={0.1} color="bg-purple-400" playTick={playTick} />
+                                    <StatSlider label="Urgency" icon="⚡" value={urgency} setValue={setUrgency} color="bg-yellow-400" playTick={playTick} minLabel="Someday" maxLabel="Tomorrow" />
+                                    <StatSlider label="Loot Value" icon="💎" value={reward} setValue={setReward} color="bg-blue-400" playTick={playTick} minLabel="Small Treat" maxLabel="Life Changing" />
+                                    <StatSlider label="Spirit (Why)" icon="🔥" value={why} setValue={setWhy} max={5} step={0.1} color="bg-purple-400" playTick={playTick} minLabel="Just Because" maxLabel="True Purpose" />
 
                                     {/* Inverse Logic for Base Level */}
                                     <div className="pt-2 border-t border-white/10">
-                                        <StatSlider label="Comfort Zone" icon="🛌" value={baseLevel} setValue={setBaseLevel} color="bg-green-400" playTick={playTick} />
+                                        <StatSlider label="Comfort Zone" icon="🛌" value={baseLevel} setValue={setBaseLevel} color="bg-green-400" playTick={playTick} minLabel="Desperate" maxLabel="Comfortable" />
                                         <p className="text-[10px] text-orange-200 text-right mt-1">*Higher comfort reduces drive</p>
                                     </div>
                                 </div>
@@ -267,11 +267,11 @@ const RPGModel = () => {
 
                             <div className="bg-[#f4e4bc] p-1 rounded-xl shadow-2xl border-b-8 border-r-4 border-[#8b5a2b]">
                                 <div className="bg-[#2c3e50] p-4 rounded-lg border-2 border-[#1a252f] space-y-6">
-                                    <StatSlider label="Fog (Clarity)" icon="☁️" value={uncertainty} setValue={setUncertainty} color="bg-slate-400" playTick={playTick} />
-                                    <StatSlider label="Difficulty" icon="⛰️" value={complexity} setValue={setComplexity} color="bg-red-400" playTick={playTick} />
-                                    <StatSlider label="Dread (Fear)" icon="👻" value={fear} setValue={setFear} color="bg-purple-600" playTick={playTick} />
-                                    <StatSlider label="Terrain (Friction)" icon="🕸️" value={friction} setValue={setFriction} color="bg-orange-600" playTick={playTick} />
-                                    <StatSlider label="Curse (Habit)" icon="⚓" value={habitInertia} setValue={setHabitInertia} color="bg-teal-600" playTick={playTick} />
+                                    <StatSlider label="Fog (Clarity)" icon="☁️" value={uncertainty} setValue={setUncertainty} color="bg-slate-400" playTick={playTick} minLabel="Clear" maxLabel="Confusing" />
+                                    <StatSlider label="Difficulty" icon="⛰️" value={complexity} setValue={setComplexity} color="bg-red-400" playTick={playTick} minLabel="Trivial" maxLabel="Impossible" />
+                                    <StatSlider label="Dread (Fear)" icon="👻" value={fear} setValue={setFear} color="bg-purple-600" playTick={playTick} minLabel="Safe" maxLabel="Terrifying" />
+                                    <StatSlider label="Terrain (Friction)" icon="🕸️" value={friction} setValue={setFriction} color="bg-orange-600" playTick={playTick} minLabel="Smooth" maxLabel="Rough" />
+                                    <StatSlider label="Curse (Habit)" icon="⚓" value={habitInertia} setValue={setHabitInertia} color="bg-teal-600" playTick={playTick} minLabel="New" maxLabel="Addiction" />
                                 </div>
                             </div>
                         </div>
@@ -444,10 +444,12 @@ interface StatSliderProps {
     step?: number;
     color: string;
     playTick?: () => void;
+    minLabel?: string;
+    maxLabel?: string;
 }
 
 // Refactored "Professional" Slider
-const StatSlider = ({ label, icon, value, setValue, max = 10, step = 1, color, playTick }: StatSliderProps) => {
+const StatSlider = ({ label, icon, value, setValue, max = 10, step = 1, color, playTick, minLabel, maxLabel }: StatSliderProps) => {
     // Generate tick marks
     const ticks = [];
     const tickCount = max / (step >= 1 ? 1 : 1); // Limit ticks for small steps
@@ -498,6 +500,13 @@ const StatSlider = ({ label, icon, value, setValue, max = 10, step = 1, color, p
                     className="rpg-slider absolute inset-0 z-10"
                 />
             </div>
+
+            {(minLabel || maxLabel) && (
+                <div className="flex justify-between text-[10px] text-white/50 px-1 mt-1 font-['Nunito'] font-bold tracking-wide">
+                    <span>{minLabel}</span>
+                    <span>{maxLabel}</span>
+                </div>
+            )}
         </div>
     );
 };

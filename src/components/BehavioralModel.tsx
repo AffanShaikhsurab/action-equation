@@ -1,14 +1,27 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import {
     Sword, Skull, Zap, Scroll, Map as MapIcon,
     Backpack, X, Sparkles, Flame, CloudRain, Volume2, VolumeX,
-    ChevronUp, ChevronDown, Eye
+    ChevronUp, ChevronDown, Eye, Save
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip
 } from 'recharts';
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import backgroundImage from '../assets/background.png';
 import { useGameSound } from '../hooks/useGameSound';
+
+// Helper to get or create a persistent anonymous user ID
+const getUserHash = (): string => {
+    const key = 'action_equation_user_hash';
+    let hash = localStorage.getItem(key);
+    if (!hash) {
+        hash = crypto.randomUUID();
+        localStorage.setItem(key, hash);
+    }
+    return hash;
+};
 
 // --- Assets & Constants ---
 
@@ -44,9 +57,12 @@ const RPGModel = () => {
 
     // UI State
     const [isOracleExpanded, setIsOracleExpanded] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveSuccess, setSaveSuccess] = useState(false);
 
     const audioRef = useRef<HTMLAudioElement>(null);
     const { playTick, playClick, playFanfare } = useGameSound();
+    const savePredictionMutation = useMutation(api.predictions.savePrediction);
 
     // Play music when quest is accepted
     useEffect(() => {
@@ -73,7 +89,7 @@ const RPGModel = () => {
         setQuestAccepted(true);
     };
 
-    // --- Calculation Engine ---
+    // --- Calculation Engine (must be before handleSavePrediction) ---
     const stats = useMemo(() => {
         const valueGap = reward - baseLevel;
         const positiveDrive = urgency * (valueGap * why);
@@ -91,6 +107,43 @@ const RPGModel = () => {
             level: Math.max(1, Math.floor((rawNetDrive + 20) / 5)) // Fake "RPG Level" calc
         };
     }, [urgency, reward, baseLevel, why, uncertainty, complexity, fear, friction, habitInertia, mood]);
+
+    const handleSavePrediction = useCallback(async () => {
+        playClick();
+        setIsSaving(true);
+        setSaveSuccess(false);
+        try {
+            await savePredictionMutation({
+                userHash: getUserHash(),
+                inputs: {
+                    urgency,
+                    loot: reward,
+                    comfort: baseLevel,
+                    why,
+                    fog: uncertainty,
+                    difficulty: complexity,
+                    fear,
+                    friction,
+                    habit: habitInertia,
+                    mood,
+                },
+                modelParams: {
+                    beta: BETA_SCALING,
+                    moodBiasVal: MOOD_BIAS[mood],
+                },
+                prediction: {
+                    zScore: stats.logit,
+                    probability: stats.probability,
+                },
+            });
+            setSaveSuccess(true);
+            setTimeout(() => setSaveSuccess(false), 3000);
+        } catch (error) {
+            console.error('Failed to save prediction:', error);
+        } finally {
+            setIsSaving(false);
+        }
+    }, [playClick, savePredictionMutation, urgency, reward, baseLevel, why, uncertainty, complexity, fear, friction, habitInertia, mood, stats.logit, stats.probability]);
 
     // --- Chart Data ---
     const chartData = useMemo(() => {
@@ -448,6 +501,20 @@ const RPGModel = () => {
                                                     <PotionButton color="bg-blue-500" icon={<Sparkles size={16} />} active={mood === 'NEUTRAL'} onClick={() => { playClick(); setMood('NEUTRAL'); }} />
                                                     <PotionButton color="bg-yellow-500" icon={<Flame size={16} />} active={mood === 'POSITIVE'} onClick={() => { playClick(); setMood('POSITIVE'); }} />
                                                 </div>
+
+                                                {/* Save Prediction Button */}
+                                                <button
+                                                    onClick={handleSavePrediction}
+                                                    disabled={isSaving}
+                                                    className={`mt-4 w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold transition-all ${saveSuccess
+                                                        ? 'bg-green-600 text-white'
+                                                        : 'bg-gradient-to-r from-[#e69d45] to-[#d68c35] hover:from-[#f0a850] hover:to-[#e69d45] text-white'
+                                                        } ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                >
+                                                    <Save size={18} />
+                                                    {isSaving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save for Research'}
+                                                </button>
+                                                <p className="text-[10px] text-gray-500 text-center mt-1">Anonymously saves your prediction for analysis.</p>
                                             </div>
                                         </div>
                                     )}

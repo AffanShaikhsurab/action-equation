@@ -6,10 +6,12 @@ export const useGameSound = () => {
     // Initialize AudioContext lazily (browsers require user interaction first)
     const initAudio = useCallback(() => {
         if (!audioContextRef.current) {
-            const AudioContext = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-            audioContextRef.current = new AudioContext();
+            const AudioContextCtor = window.AudioContext || (window as any).webkitAudioContext;
+            if (AudioContextCtor) {
+                audioContextRef.current = new AudioContextCtor();
+            }
         }
-        if (audioContextRef.current.state === 'suspended') {
+        if (audioContextRef.current?.state === 'suspended') {
             audioContextRef.current.resume();
         }
     }, []);

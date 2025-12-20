@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import {
     Sword, Skull, Zap, Scroll, Map as MapIcon,
     Backpack, X, Sparkles, Flame, CloudRain, Volume2, VolumeX,
-    ChevronUp, ChevronDown
+    ChevronUp, ChevronDown, Eye
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip
@@ -38,6 +38,7 @@ const RPGModel = () => {
 
     const [mood, setMood] = useState<'POSITIVE' | 'NEUTRAL' | 'DEPRESSED'>('NEUTRAL');
     const [showMap, setShowMap] = useState(false); // Toggles the Chart Modal
+    const [showInfoModal, setShowInfoModal] = useState(false); // Toggles the Info/Help Modal
     const [questAccepted, setQuestAccepted] = useState(false); // Controls main flow: false = show quest intro, true = show stats
     const [isMusicPlaying, setIsMusicPlaying] = useState(false);
 
@@ -167,6 +168,7 @@ const RPGModel = () => {
                     <GameButton icon={isMusicPlaying ? <Volume2 /> : <VolumeX />} label={isMusicPlaying ? "Mute" : "Music"} onClick={toggleMusic} />
                     <GameButton icon={<Backpack />} label="Bag" onClick={playClick} />
                     <GameButton icon={<MapIcon />} label="Map" onClick={() => { playClick(); setShowMap(true); }} alert={true} />
+                    <GameButton icon={<Eye />} label="Info" onClick={() => { playClick(); setShowInfoModal(true); }} />
                 </div>
             </div>
 
@@ -245,13 +247,51 @@ const RPGModel = () => {
 
                             <div className="bg-[#f4e4bc] p-1 rounded-xl shadow-2xl border-b-8 border-r-4 border-[#8b5a2b]">
                                 <div className="bg-[#5c4033] p-4 rounded-lg border-2 border-[#3e2723] space-y-6">
-                                    <StatSlider label="Urgency" icon="⚡" value={urgency} setValue={setUrgency} color="bg-yellow-400" playTick={playTick} />
-                                    <StatSlider label="Loot Value" icon="💎" value={reward} setValue={setReward} color="bg-blue-400" playTick={playTick} />
-                                    <StatSlider label="Spirit (Why)" icon="🔥" value={why} setValue={setWhy} max={5} step={0.1} color="bg-purple-400" playTick={playTick} />
+                                    <StatSlider
+                                        label="Urgency"
+                                        icon="⚡"
+                                        value={urgency}
+                                        setValue={setUrgency}
+                                        color="bg-yellow-400"
+                                        playTick={playTick}
+                                        description="How soon does this need to happen?"
+                                        exampleText="Low: No rush | High: Immediate deadline"
+                                    />
+                                    <StatSlider
+                                        label="Loot Value"
+                                        icon="💎"
+                                        value={reward}
+                                        setValue={setReward}
+                                        color="bg-blue-400"
+                                        playTick={playTick}
+                                        description="How much do you value the reward?"
+                                        exampleText="Low: Don't care | High: Must have it"
+                                    />
+                                    <StatSlider
+                                        label="Spirit (Why)"
+                                        icon="🔥"
+                                        value={why}
+                                        setValue={setWhy}
+                                        max={5}
+                                        step={0.1}
+                                        color="bg-purple-400"
+                                        playTick={playTick}
+                                        description="How meaningful is this to you?"
+                                        exampleText="Low: Just a chore | High: Life purpose"
+                                    />
 
                                     {/* Inverse Logic for Base Level */}
                                     <div className="pt-2 border-t border-white/10">
-                                        <StatSlider label="Comfort Zone" icon="🛌" value={baseLevel} setValue={setBaseLevel} color="bg-green-400" playTick={playTick} />
+                                        <StatSlider
+                                            label="Comfort Zone"
+                                            icon="🛌"
+                                            value={baseLevel}
+                                            setValue={setBaseLevel}
+                                            color="bg-green-400"
+                                            playTick={playTick}
+                                            description="How comfortable is your current state?"
+                                            exampleText="Low: Unbearable | High: Too cozy to move"
+                                        />
                                         <p className="text-[10px] text-orange-200 text-right mt-1">*Higher comfort reduces drive</p>
                                     </div>
                                 </div>
@@ -267,11 +307,56 @@ const RPGModel = () => {
 
                             <div className="bg-[#f4e4bc] p-1 rounded-xl shadow-2xl border-b-8 border-r-4 border-[#8b5a2b]">
                                 <div className="bg-[#2c3e50] p-4 rounded-lg border-2 border-[#1a252f] space-y-6">
-                                    <StatSlider label="Fog (Clarity)" icon="☁️" value={uncertainty} setValue={setUncertainty} color="bg-slate-400" playTick={playTick} />
-                                    <StatSlider label="Difficulty" icon="⛰️" value={complexity} setValue={setComplexity} color="bg-red-400" playTick={playTick} />
-                                    <StatSlider label="Dread (Fear)" icon="👻" value={fear} setValue={setFear} color="bg-purple-600" playTick={playTick} />
-                                    <StatSlider label="Terrain (Friction)" icon="🕸️" value={friction} setValue={setFriction} color="bg-orange-600" playTick={playTick} />
-                                    <StatSlider label="Curse (Habit)" icon="⚓" value={habitInertia} setValue={setHabitInertia} color="bg-teal-600" playTick={playTick} />
+                                    <StatSlider
+                                        label="Fog (Clarity)"
+                                        icon="☁️"
+                                        value={uncertainty}
+                                        setValue={setUncertainty}
+                                        color="bg-slate-400"
+                                        playTick={playTick}
+                                        description="How clear are the steps?"
+                                        exampleText="Low: Crystal clear | High: No clue where to start"
+                                    />
+                                    <StatSlider
+                                        label="Difficulty"
+                                        icon="⛰️"
+                                        value={complexity}
+                                        setValue={setComplexity}
+                                        color="bg-red-400"
+                                        playTick={playTick}
+                                        description="How hard is the actual task?"
+                                        exampleText="Low: Trivial | High: Hercules level"
+                                    />
+                                    <StatSlider
+                                        label="Dread (Fear)"
+                                        icon="👻"
+                                        value={fear}
+                                        setValue={setFear}
+                                        color="bg-purple-600"
+                                        playTick={playTick}
+                                        description="How much do you fear doing it?"
+                                        exampleText="Low: Fearless | High: Paralyzed"
+                                    />
+                                    <StatSlider
+                                        label="Terrain (Friction)"
+                                        icon="🕸️"
+                                        value={friction}
+                                        setValue={setFriction}
+                                        color="bg-orange-600"
+                                        playTick={playTick}
+                                        description="How much environmental friction?"
+                                        exampleText="Low: Smooth sailing | High: Red tape/Tech issues"
+                                    />
+                                    <StatSlider
+                                        label="Curse (Habit)"
+                                        icon="⚓"
+                                        value={habitInertia}
+                                        setValue={setHabitInertia}
+                                        color="bg-teal-600"
+                                        playTick={playTick}
+                                        description="How strong is your habit against this?"
+                                        exampleText="Low: No habit | High: Addiction/Deep rut"
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -303,7 +388,7 @@ const RPGModel = () => {
                                         {/* Left: Summary */}
                                         <div className="flex items-center gap-4">
                                             <div className="hidden md:block w-12 h-12 bg-slate-800 rounded-lg overflow-hidden border-2 border-white/20">
-                                                 <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=Eve&backgroundColor=ffdfbf`} alt="Oracle" className="w-full h-full" />
+                                                <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=Eve&backgroundColor=ffdfbf`} alt="Oracle" className="w-full h-full" />
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-2">
@@ -333,7 +418,7 @@ const RPGModel = () => {
                                     {/* Expanded Content (Details) */}
                                     {isOracleExpanded && (
                                         <div className="mt-6 pt-6 border-t border-white/10 grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
-                                             {/* Message */}
+                                            {/* Message */}
                                             <div className="md:col-span-2 space-y-4">
                                                 <p className="text-lg font-medium leading-relaxed font-['Nunito'] text-gray-200 bg-black/20 p-4 rounded-lg border-l-4 border-yellow-500">
                                                     "{getOracleMessage()}"
@@ -402,6 +487,94 @@ const RPGModel = () => {
                 </div>
             )}
 
+            {/* --- MODAL: INFO (THE EQUATION) --- */}
+            {showInfoModal && (
+                <div className="fixed inset-0 z-[60] bg-black/85 flex items-center justify-center p-4 backdrop-blur-md animate-fade-in">
+                    <div className="bg-[#f3e5d0] w-full max-w-2xl rounded-sm shadow-2xl relative p-8 md:p-10 border-[12px] border-[#5c4033] max-h-[90vh] overflow-y-auto">
+                        <button onClick={() => { playClick(); setShowInfoModal(false); }} className="absolute top-4 right-4 text-[#5c4033] hover:text-red-600">
+                            <X size={32} strokeWidth={3} />
+                        </button>
+
+                        <div className="text-center mb-6">
+                            <div className="inline-block bg-[#e69d45] text-white px-4 py-1 rounded-full text-sm font-bold uppercase tracking-widest mb-2 shadow-sm">
+                                The Archive
+                            </div>
+                            <h2 className="font-['Fredoka'] text-4xl text-[#5c4033] underline decoration-wavy decoration-[#e69d45]">The Action Equation</h2>
+                        </div>
+
+                        <div className="space-y-6 font-['Nunito'] text-[#4a3c31]">
+
+                            {/* Section 1: The Behavioral Probability Equation */}
+                            <div className="bg-[#5c4033] p-6 rounded-xl text-center text-[#f3e5d0] shadow-inner">
+                                <p className="text-lg font-bold mb-4 uppercase tracking-wider text-yellow-500">The Behavioral Probability Equation</p>
+
+                                {/* Main Sigmoid Equation */}
+                                <div className="text-xl md:text-2xl font-mono font-bold leading-relaxed bg-black/20 p-4 rounded-lg border border-white/10 mb-6 font-serif">
+                                    P(Action) = σ( β · <span className="text-yellow-400">Z</span> + MoodBias )
+                                </div>
+
+                                {/* Latent Potential Z Definition */}
+                                <div className="text-left bg-black/10 p-4 rounded-lg border border-white/5 space-y-3">
+                                    <p className="font-bold text-center text-yellow-400 mb-2 font-serif text-lg">Where <span className="italic">Z</span> (Latent Potential) is:</p>
+
+                                    <div className="font-mono text-sm md:text-base space-y-2">
+                                        <div className="flex flex-col md:flex-row gap-2 items-center justify-center">
+                                            <span className="text-green-400 font-bold">[ Net Drive ]</span>
+                                            <span className="text-white/50">-</span>
+                                            <span className="text-red-400 font-bold">[ Sum of Blockers ]</span>
+                                        </div>
+
+                                        <div className="w-full h-px bg-white/10 my-2"></div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs md:text-sm">
+                                            <div>
+                                                <span className="text-green-400 font-bold block mb-1">Net Drive:</span>
+                                                Action = Urgency × (Loot - Comfort) × Why
+                                            </div>
+                                            <div>
+                                                <span className="text-red-400 font-bold block mb-1">Sum of Blockers:</span>
+                                                Fog + Difficulty + Fear + Friction + Habit
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section 2: Constants & Calibration */}
+                            <div className="bg-white/40 p-4 rounded-lg border border-[#5c4033]/10">
+                                <h3 className="text-lg font-bold mb-3 flex items-center gap-2 text-[#5c4033]">
+                                    <Sparkles className="text-purple-600" size={18} />
+                                    System Constants
+                                </h3>
+                                <ul className="text-sm space-y-2 list-disc list-inside">
+                                    <li>
+                                        <span className="font-bold">β (Beta):</span> <span className="font-mono bg-[#5c4033]/10 px-1 rounded">0.05</span> — Scaling factor to convert raw 1-10 inputs into probability logits.
+                                    </li>
+                                    <li>
+                                        <span className="font-bold">Mood Bias (μ):</span> Shifts the baseline probability based on state.
+                                        <ul className="list-none pl-6 mt-1 space-y-1 text-xs text-gray-600">
+                                            <li><span className="text-green-700 font-bold">+2.5</span> (Positive/Buffed)</li>
+                                            <li><span className="text-gray-700 font-bold">0.0</span> (Neutral)</li>
+                                            <li><span className="text-red-700 font-bold">-2.0</span> (Depressed/Cursed)</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            {/* Section 3: How to Read (Simplified) */}
+                            <div className="grid grid-cols-1 gap-4">
+                                <div className="bg-[#e69d45]/10 p-3 rounded-lg border border-[#e69d45]/30 text-center">
+                                    <p className="text-sm italic font-medium text-[#5c4033]">
+                                        "This equation helps you debug your inaction. If <span className="font-bold">P(Action) &gt; 0.8</span>, doing the work becomes automatic."
+                                    </p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Background Music */}
             <audio
                 ref={audioRef}
@@ -444,10 +617,12 @@ interface StatSliderProps {
     step?: number;
     color: string;
     playTick?: () => void;
+    description: string;
+    exampleText: string;
 }
 
 // Refactored "Professional" Slider
-const StatSlider = ({ label, icon, value, setValue, max = 10, step = 1, color, playTick }: StatSliderProps) => {
+const StatSlider = ({ label, icon, value, setValue, max = 10, step = 1, color, playTick, description, exampleText }: StatSliderProps) => {
     // Generate tick marks
     const ticks = [];
     const tickCount = max / (step >= 1 ? 1 : 1); // Limit ticks for small steps
@@ -466,37 +641,46 @@ const StatSlider = ({ label, icon, value, setValue, max = 10, step = 1, color, p
     };
 
     return (
-        <div className="relative mb-2">
+        <div className="relative mb-6"> {/* Increased bottom margin for text */}
             <div className="flex justify-between text-white/90 text-sm font-bold mb-2 font-['Fredoka'] tracking-wide">
-                <span className="flex items-center gap-1.5 text-shadow-sm">{icon} {label}</span>
+                <span className="flex items-center gap-1.5 text-shadow-sm tooltip-container relative group">
+                    {icon} {label}
+                    {/* Optional: Add an info icon if you want a hover tooltip too, but we are doing inline text for now */}
+                </span>
                 <span className="bg-black/30 px-2 rounded text-xs leading-5">{value.toFixed(step < 1 ? 1 : 0)}</span>
             </div>
 
-            <div className="relative h-8 flex items-center">
-                 {/* Track Background */}
-                 <div className="absolute w-full h-3 bg-black/40 rounded-full border border-white/10 shadow-inner overflow-hidden">
-                     {/* Fill */}
+            <div className="relative h-8 flex items-center mb-2">
+                {/* Track Background */}
+                <div className="absolute w-full h-3 bg-black/40 rounded-full border border-white/10 shadow-inner overflow-hidden">
+                    {/* Fill */}
                     <div
                         className={`absolute top-0 left-0 h-full ${color} opacity-80 transition-all duration-75 ease-out`}
                         style={{ width: `${(value / max) * 100}%` }}
                     ></div>
-                 </div>
+                </div>
 
-                 {/* Ticks */}
-                 <div className="absolute w-full h-full pointer-events-none flex justify-between px-[10px]">
-                     {ticks.map((t) => (
-                         <div key={t} className="w-0.5 h-1 bg-white/20 mt-3.5"></div>
-                     ))}
-                 </div>
+                {/* Ticks */}
+                <div className="absolute w-full h-full pointer-events-none flex justify-between px-[10px]">
+                    {ticks.map((t) => (
+                        <div key={t} className="w-0.5 h-1 bg-white/20 mt-3.5"></div>
+                    ))}
+                </div>
 
-                 {/* Real Input - styled with class 'rpg-slider' from index.css */}
-                 <input
+                {/* Real Input - styled with class 'rpg-slider' from index.css */}
+                <input
                     type="range"
                     min={0} max={max} step={step}
                     value={value}
                     onChange={handleChange}
                     className="rpg-slider absolute inset-0 z-10"
                 />
+            </div>
+
+            {/* Description and Example */}
+            <div className="text-left px-1">
+                <p className="text-xs text-gray-300 font-medium font-['Nunito'] mb-0.5">{description}</p>
+                <p className="text-[10px] text-gray-400 italic font-['Nunito']">{exampleText}</p>
             </div>
         </div>
     );

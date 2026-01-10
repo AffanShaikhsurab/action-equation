@@ -370,12 +370,12 @@ const RPGModel = () => {
                                     <StatSlider
                                         label="Fog (Clarity)"
                                         icon="☁️"
-                                        value={uncertainty}
-                                        setValue={setUncertainty}
+                                        value={10 - uncertainty}
+                                        setValue={(val) => setUncertainty(10 - val)}
                                         color="bg-slate-400"
                                         playTick={playTick}
                                         description="How clear are the steps?"
-                                        exampleText="Low: Crystal clear | High: No clue where to start"
+                                        exampleText="Low: No clue where to start | High: Crystal clear"
                                     />
                                     <StatSlider
                                         label="Difficulty"

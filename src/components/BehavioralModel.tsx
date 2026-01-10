@@ -91,12 +91,19 @@ const RPGModel = () => {
 
     // --- Calculation Engine (must be before handleSavePrediction) ---
     const stats = useMemo(() => {
+        // Core formula: Higher urgency & why → Higher probability
+        // Higher blockers → Lower probability
         const valueGap = reward - baseLevel;
         const positiveDrive = urgency * (valueGap * why);
         const totalBlockers = uncertainty + complexity + fear + friction + habitInertia;
         const rawNetDrive = positiveDrive - totalBlockers;
         const z = (rawNetDrive * BETA_SCALING) + MOOD_BIAS[mood];
         const prob = sigmoid(z);
+
+        // Debug: Log to verify correct direction
+        if (typeof window !== 'undefined' && (window as any).DEBUG_SLIDERS) {
+            console.log('Urgency:', urgency, 'Why:', why, '→ Drive:', positiveDrive, '→ Prob:', prob);
+        }
 
         return {
             netDrive: rawNetDrive,
